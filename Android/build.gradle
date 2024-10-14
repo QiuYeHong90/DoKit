@@ -1,0 +1,239 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    apply from: "config.gradle"
+    def runType = rootProject.ext.publish_config["run_type"]
+    def dokitPluginVersion = rootProject.ext.publish_config["version"]
+
+    def kotlinVersion
+    if (needKotlinV14()) {
+        kotlinVersion = rootProject.ext.android["kotlin_version_v14"]
+    } else {
+        kotlinVersion = rootProject.ext.android["kotlin_version_v13"]
+    }
+
+    def gradlePluginVersion = rootProject.ext.android["agp_module_verson"]
+
+
+    repositories {
+        google()
+        mavenCentral()
+        jcenter()
+        maven {
+            url "https://oss.sonatype.org/content/groups/public"
+        }
+
+        println("[dokit build] add buildscript private repositories")
+        println("[dokit build] usePrivateEnv=" + usePrivateEnv() +",privateRepository="+ privateRepository())
+        println("[dokit build] useLocalRepository="+useLocalRepository()+",localRepository="+localRepository() )
+
+        if (usePrivateEnv()){
+            maven {
+                url privateRepository()
+            }
+        }
+        if (useLocalRepository()){
+            maven {
+                url uri(localRepository())
+            }
+        }
+
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:$gradlePluginVersion"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+
+        // MavenCentral
+        classpath "org.jetbrains.dokka:dokka-gradle-plugin:1.4.30"
+        if (runType == 1) {
+            classpath "io.github.didi.dokit:dokitx-plugin:$dokitPluginVersion"
+        }
+
+//        classpath "com.didiglobal.booster:booster-task-compression-pngquant:${rootProject.ext.android["booster_version"]}"
+
+//        classpath "com.didiglobal.booster:booster-gradle-plugin:3.3.1"
+//        classpath "com.didiglobal.booster:booster-task-analyser:3.3.1"
+    }
+
+}
+
+apply from: "./config.gradle"
+
+allprojects {
+    def isRootProject = "Dokit-Android".equals(project.name)
+    repositories {
+        google()
+        mavenCentral()
+        jcenter()
+        maven {
+            url "https://oss.sonatype.org/content/groups/public"
+        }
+
+        println("[dokit build] add allprojects repositories config project=" + project.name)
+        println("[dokit build] usePrivateEnv=" + usePrivateEnv() + ",privateRepository=" + privateRepository())
+        println("[dokit build] useLocalRepository=" + useLocalRepository() + ",localRepository=" + localRepository())
+
+        if (usePrivateEnv()) {
+            maven {
+                url privateRepository()
+            }
+        }
+
+        if (useLocalRepository()){
+            maven {
+                url uri(localRepository())
+            }
+        }
+    }
+}
+
+task clean(type: Delete) {
+    doLast {
+        delete rootProject.buildDir
+    }
+}
+
+/**
+ * 删除指定目录下的文件
+ */
+task deleteSource(type: Delete) {
+    doFirst {
+        println("path===>${project.rootDir}")
+        println("===delete Plugin Source start===")
+    }
+    followSymlinks = true
+    delete "${project.rootDir}/dokit-plugin/src/main/kotlin"
+    doLast {
+        println("===delete Plugin Source end===")
+    }
+}
+
+/**
+ * 将buildSrc中的代码同步到doraemonkit-plugin中
+ */
+task copyPluginSource(type: Copy, dependsOn: deleteSource) {
+    doFirst {
+        println("===copy Plugin Source start===")
+    }
+
+    from "${project.rootDir}/buildSrc/src/main/kotlin"
+    into "${project.rootDir}/dokit-plugin/src/main/kotlin"
+    include('**/*')
+
+    doLast {
+        println("===copy Plugin Source end===")
+    }
+}
+
+/**
+ * 打包上传配置检查
+ */
+task checkUploadConfig4Maven() {
+    doLast {
+        if (rootProject.ext.publish_config["archives_type"] != 2) {
+            throw new RuntimeException("执行当前打包上传任务必须修改config.gradle配置中的archives_type = 2。")
+        }
+
+        //仓库检查
+        def repositories = new ArrayList<String>()
+
+        rootProject.repositories.forEach {
+            if (it instanceof MavenArtifactRepository) {
+                repositories.add((it as MavenArtifactRepository).url.toString())
+            }
+        }
+
+        //相关模块检查
+        def modules = new ArrayList<String>()
+
+        rootProject.allprojects.forEach {
+            modules.add(it.name)
+        }
+
+//        if (!modules.contains("dokit-rpc")) {
+//            throw new RuntimeException("未找到dokit-rpc module。。。")
+//        }
+//
+//        if (!modules.contains("dokit-rpc-mc")) {
+//            throw new RuntimeException("未找到dokit-rpc-mc module。。。")
+//        }
+
+        if (!modules.contains("dokit-plugin")) {
+            throw new RuntimeException("未找到dokit-plugin module。。。")
+        }
+    }
+}
+
+task checkUploadConfig4Local() {
+    doLast {
+        //配置检查
+        if (rootProject.ext.publish_config["archives_type"] != 0) {
+            throw new RuntimeException("执行当前打包上传任务必须修改config.gradle配置中的archives_type = 0。")
+        }
+        //仓库检查
+        def repositories = new ArrayList<String>()
+
+        rootProject.repositories.forEach {
+            if (it instanceof MavenArtifactRepository) {
+                repositories.add((it as MavenArtifactRepository).url.toString())
+            }
+        }
+
+        //相关模块检查
+        def modules = new ArrayList<String>()
+
+        rootProject.allprojects.forEach {
+            modules.add(it.name)
+        }
+
+//        if (!modules.contains("dokit-rpc")) {
+//            throw new RuntimeException("未找到dokit-rpc module。。。")
+//        }
+//
+//        if (!modules.contains("dokit-rpc-mc")) {
+//            throw new RuntimeException("未找到dokit-rpc-mc module。。。")
+//        }
+
+        if (!modules.contains("dokit-plugin")) {
+            throw new RuntimeException("未找到dokit-plugin module。。。")
+        }
+    }
+}
+
+task checkUploadConfig4Didi() {
+    doLast {
+        if (rootProject.ext.publish_config["archives_type"] != 1) {
+            throw new RuntimeException("执行当前打包上传任务必须修改config.gradle配置中的archives_type = 1。")
+        }
+        //仓库检查
+        def repositories = new ArrayList<String>()
+
+        rootProject.repositories.forEach {
+            if (it instanceof MavenArtifactRepository) {
+                repositories.add((it as MavenArtifactRepository).url.toString())
+            }
+        }
+
+        //相关模块检查
+        def modules = new ArrayList<String>()
+
+        rootProject.allprojects.forEach {
+            modules.add(it.name)
+        }
+
+//        if (!modules.contains("dokit-rpc")) {
+//            throw new RuntimeException("未找到dokit-rpc module。。。")
+//        }
+//
+//        if (!modules.contains("dokit-rpc-mc")) {
+//            throw new RuntimeException("未找到dokit-rpc-mc module。。。")
+//        }
+
+        if (!modules.contains("dokit-plugin")) {
+            throw new RuntimeException("未找到dokit-plugin module。。。")
+        }
+    }
+}
+
+
+

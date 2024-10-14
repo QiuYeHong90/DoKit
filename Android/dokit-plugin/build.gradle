@@ -1,0 +1,53 @@
+apply plugin: 'kotlin'
+apply plugin: 'kotlin-kapt'
+apply from: '../upload.gradle'
+
+sourceSets {
+    main {
+        java {
+            srcDirs += []
+        }
+        kotlin {
+            srcDirs += ['src/main/kotlin', 'src/main/java']
+        }
+    }
+
+
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8
+}
+
+
+dependencies {
+    compileOnly gradleApi()
+    compileOnly localGroovy()
+
+    //版本不能太高 否则会跟项目的as版本冲突
+    compileOnly "com.android.tools.build:gradle:${rootProject.ext.android["agp_plugin_verson"]}"
+    /* 👇👇👇👇 引用这两个模块 👇👇👇👇 */
+    api "com.didiglobal.booster:booster-api:${rootProject.ext.android["booster_version"]}"
+    api "com.didiglobal.booster:booster-transform-asm:${rootProject.ext.android["booster_version"]}"
+}
+
+/**
+ * 删除指定目录下的文件
+ */
+task deleteSource(type: Delete) {
+    doLast {
+        delete './src/main/kotlin'
+    }
+}
+
+
+
+
+repositories {
+    google()
+//    jcenter()
+    mavenCentral()
+}
+
+
+
