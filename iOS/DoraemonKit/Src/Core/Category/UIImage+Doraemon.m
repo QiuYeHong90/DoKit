@@ -14,18 +14,22 @@
     if(name &&
        ![name isEqualToString:@""]){
         NSBundle *bundle = [NSBundle bundleForClass:NSClassFromString(@"DoraemonManager")];
-        NSURL *url = [bundle URLForResource:@"DoraemonKit" withExtension:@"bundle"];
-        if(!url) return [UIImage new];
-        NSBundle *imageBundle = [NSBundle bundleWithURL:url];
-        
+//        NSURL *url = [bundle URLForResource:@"DoraemonKit" withExtension:@"bundle"];
+//        if(!url) return [UIImage new];
+//        NSBundle *imageBundle = [NSBundle bundleWithURL:url];
+        NSBundle *imageBundle = bundle;
         NSString *imageName = nil;
+        UIImage *image = [UIImage imageNamed:name inBundle:imageBundle compatibleWithTraitCollection:nil];
+        if (image) {
+            return image;
+        }
         CGFloat scale = [UIScreen mainScreen].scale;
         if (ABS(scale-3) <= 0.001) {
             imageName = [NSString stringWithFormat:@"%@@3x",name];
         } else {
             imageName = [NSString stringWithFormat:@"%@@2x",name];
         }
-        UIImage *image = [UIImage imageWithContentsOfFile:[imageBundle pathForResource:imageName ofType:@"png"]];
+        image = [UIImage imageWithContentsOfFile:[imageBundle pathForResource:imageName ofType:@"png"]];
         if (!image) {
             image = [UIImage imageWithContentsOfFile:[imageBundle pathForResource:name ofType:@"png"]];
             if (!image) {
@@ -42,9 +46,11 @@
     if(name &&
        ![name isEqualToString:@""]){
         NSBundle *bundle = [NSBundle bundleForClass:NSClassFromString(@"DoraemonManager")];
-        NSURL *url = [bundle URLForResource:@"DoraemonKit" withExtension:@"bundle"];
-        if(!url) return [UIImage new];
-        NSBundle *imageBundle = [NSBundle bundleWithURL:url];
+//        NSURL *url = [bundle URLForResource:@"DoraemonKit" withExtension:@"bundle"];
+//        if(!url) return [UIImage new];
+        
+//        NSBundle *imageBundle = [NSBundle bundleWithURL:url];
+        NSBundle *imageBundle = bundle;
         UIImage *image = [UIImage imageNamed:name inBundle:imageBundle compatibleWithTraitCollection:nil];
         return image;
     }

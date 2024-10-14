@@ -21,9 +21,10 @@
     }
 //    NSBundle *tmp = [NSBundle bundleWithPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.bundle/", @"DoraemonKit"]]];
     NSBundle *tmpBundle = [NSBundle bundleForClass:NSClassFromString(@"DoraemonManager")];
-    NSURL *url = [tmpBundle URLForResource:@"DoraemonKit" withExtension:@"bundle"];
-    if(!url) return key;
-    NSBundle *tmp = [NSBundle bundleWithURL:url];
+//    NSURL *url = [tmpBundle URLForResource:@"DoraemonKit" withExtension:@"bundle"];
+//    if(!url) return key;
+//    NSBundle *tmp = [NSBundle bundleWithURL:url];
+    NSBundle *tmp = tmpBundle;
     
     NSString *path = [tmp pathForResource:fileNamePrefix ofType:@"lproj"];
     NSBundle *bundle = [NSBundle bundleWithPath:path];
